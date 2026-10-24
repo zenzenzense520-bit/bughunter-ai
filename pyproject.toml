@@ -1,0 +1,46 @@
+[project]
+name = "bughunter-ai"
+version = "0.1.0"
+description = "Authorized bug-bounty workbench with human-in-the-loop gates (SAST + passive DAST)"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "Proprietary" }
+dependencies = [
+    # Strong-typed ORM (SQLAlchemy + Pydantic); SQLite persistence
+    "sqlmodel>=0.0.24",
+    # Strong-typed command line interface
+    "typer>=0.15",
+    # Typed configuration loaded from TOML + environment variables
+    "pydantic-settings>=2.6",
+    # HTTP client for LLM (Ollama OpenAI-compatible API) and ZAP REST API only
+    "httpx>=0.27",
+    # Markdown report templates
+    "jinja2>=3.1",
+    # Terminal tables and formatted output
+    "rich>=13.10",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-mock>=3.14",
+]
+
+[project.scripts]
+bughunter = "bughunter.app.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/bughunter"]
+
+[tool.uv]
+package = true
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra"

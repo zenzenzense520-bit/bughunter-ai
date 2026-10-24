@@ -1,0 +1,37 @@
+# BugHunter AI 默认配置
+# 可被环境变量覆盖，前缀 BUGHUNTER_，嵌套分隔符 __，例如 BUGHUNTER_RATELIMIT__DAILY_BUDGET=100
+
+[general]
+# 运行时数据目录（数据库、证据、报告），相对路径相对于项目根；可用 BUGHUNTER_HOME 覆盖
+home = "data"
+log_dir = "logs"
+# 审计/日志中的操作者标识（单人本地工具）
+actor = "local"
+
+[llm]
+# Ollama 本地 OpenAI 兼容接口
+base_url = "http://127.0.0.1:11434/v1"
+model = "qwen2.5:7b"
+# API Key 只从该环境变量读取（Ollama 本地通常无需设置，可留空占位）
+api_key_env = "BUGHUNTER_LLM_API_KEY"
+timeout_sec = 60
+max_retries = 2
+
+[ratelimit]
+# 每个目标的保守请求速率（每秒请求数）与每日预算
+requests_per_sec = 1.0
+daily_budget = 500
+
+[scan]
+# v1 硬关闭主动扫描（即使改为 true，代码层也会拒绝）
+active_scan_enabled = false
+# semgrep 执行后端：docker（Windows 推荐）| wsl
+semgrep_backend = "docker"
+# ZAP / Juice Shop 所在 docker 网络
+zap_network = "bughunter_lab"
+zap_spider_depth = 5
+zap_threads = 2
+
+[evidence]
+# 响应证据截断上限（字节）
+response_max_bytes = 4096

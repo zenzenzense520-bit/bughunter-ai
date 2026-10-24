@@ -1,0 +1,25 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+build/
+dist/
+
+# Runtime data (database, evidence, reports, logs) - never commit
+data/
+logs/
+*.db
+*.db-journal
+*.sqlite
+
+# Local secrets and environment
+.env
+.env.local
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
