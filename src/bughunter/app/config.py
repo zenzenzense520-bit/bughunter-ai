@@ -40,6 +40,12 @@ class RateLimitSettings(BaseModel):
 class ScanSettings(BaseModel):
     active_scan_enabled: bool = False
     semgrep_backend: str = "docker"
+    semgrep_image: str = "semgrep/semgrep:latest"
+    semgrep_timeout_sec: int = 300
+    semgrep_mem_limit_mb: int = 2048
+    semgrep_rules_dir: str = "assets/rules/semgrep"
+    # Offline local rule packs only; the registry "auto" config is never used.
+    semgrep_extra_configs: list[str] = Field(default_factory=list)
     zap_network: str = "bughunter_lab"
     zap_spider_depth: int = 5
     zap_threads: int = 2
@@ -94,6 +100,15 @@ class Settings(BaseSettings):
 
     def db_path(self) -> Path:
         return self.home_dir() / "bughunter.db"
+
+    def semgrep_rules_dir(self) -> Path:
+        path = Path(self.scan.semgrep_rules_dir)
+        if not path.is_absolute():
+            path = PROJECT_ROOT / path
+        return path
+
+    def raw_dir(self) -> Path:
+        return self.home_dir() / "raw"
 
     def llm_api_key(self) -> str:
         """API key is read from an environment variable, never stored."""

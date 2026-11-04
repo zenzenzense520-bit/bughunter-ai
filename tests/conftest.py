@@ -1,13 +1,36 @@
-"""Shared fixtures: isolated temp database and object factories."""
+"""Shared fixtures: isolated temp database, factories, docker gate."""
 
 from datetime import timedelta
+from pathlib import Path
 
 import pytest
 
 from bughunter.app import container
-from bughunter.core.db import session_scope
 from bughunter.core.enums import ScopeKind, ScopeRuleType
-from bughunter.core.models import Authorization, ScopeEntry, Target, utcnow
+from bughunter.core.models import Authorization, ScopeEntry, Target, session_scope, utcnow
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+VULN_APP = PROJECT_ROOT / "tests" / "fixtures" / "vuln_app"
+SEMGREP_RULES = PROJECT_ROOT / "assets" / "rules" / "semgrep"
+SAMPLE_REPORT = PROJECT_ROOT / "tests" / "fixtures" / "semgrep_sample.json"
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--run-docker",
+        action="store_true",
+        default=False,
+        help="run integration tests that require Docker images",
+    )
+
+
+def pytest_collection_modifyitems(config, items):
+    if config.getoption("--run-docker"):
+        return
+    skip_docker = pytest.mark.skip(reason="needs --run-docker and a pulled image")
+    for item in items:
+        if "docker" in item.keywords:
+            item.add_marker(skip_docker)
 
 
 @pytest.fixture
@@ -24,6 +47,31 @@ def engine(tmp_path, monkeypatch):
 def session(engine):
     with session_scope(engine) as s:
         yield s
+
+
+@pytest.fixture
+def conftest_sample():
+    """Text of the bundled desensitized Semgrep sample report."""
+    return SAMPLE_REPORT.read_text(encoding="utf-8")
+
+
+@pytest.fixture
+def semgrep_rules_dir():
+    return SEMGREP_RULES
+
+
+@pytest.fixture
+def sast_config(tmp_path):
+    from bughunter.scanners.service import SastConfig
+
+    return SastConfig(
+        image="semgrep/semgrep:test",
+        rules_dir=SEMGREP_RULES,
+        raw_dir=tmp_path / "raw",
+        mem_limit_mb=512,
+        timeout_sec=60,
+        extra_configs=(),
+    )
 
 
 @pytest.fixture
@@ -69,5 +117,12 @@ def factories(session):
             return self.scope(
                 target_id, ScopeKind.EXCLUDE.value, ScopeRuleType.PATH_REGEX.value, regex
             )
+
+        def active_target(self, name: str = "lab", host: str = "127.0.0.1") -> Target:
+            """Target with confirmed in-date authorization and an include scope."""
+            target = self.target(name=name, status="active")
+            self.authz(target.id, confirmed=True)
+            self.include_host(target.id, host)
+            return target
 
     return Factory()

@@ -27,7 +27,15 @@ daily_budget = 500
 active_scan_enabled = false
 # semgrep 执行后端：docker（Windows 推荐）| wsl
 semgrep_backend = "docker"
-# ZAP / Juice Shop 所在 docker 网络
+# Semgrep 镜像、超时（秒）、内存上限（MB）；SAST 容器强制 --network none
+semgrep_image = "semgrep/semgrep:latest"
+semgrep_timeout_sec = 300
+semgrep_mem_limit_mb = 2048
+# 离线自定义规则目录（只读挂载）；不使用需要联网的 --config auto
+semgrep_rules_dir = "assets/rules/semgrep"
+# 额外的离线本地规则集（容器内路径），默认空
+semgrep_extra_configs = []
+# ZAP / Juice Shop 所在 docker 网络（M5 使用）
 zap_network = "bughunter_lab"
 zap_spider_depth = 5
 zap_threads = 2

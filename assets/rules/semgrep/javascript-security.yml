@@ -1,0 +1,64 @@
+rules:
+  - id: bughunter.javascript.inner-html-assignment
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: >-
+      Assigning to innerHTML with dynamic data can introduce cross-site
+      scripting (XSS). Use textContent or a context-aware escaping API (CWE-79).
+    metadata:
+      cwe:
+        - "CWE-79: Improper Neutralization of Input During Web Page Generation"
+      owasp:
+        - "A03:2021 - Injection"
+      references:
+        - "https://developer.mozilla.org/en-US/docs/Web/API/Element/innerHTML"
+      bughunter.custom: "true"
+    pattern: $EL.innerHTML = $X
+
+  - id: bughunter.javascript.document-write
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: >-
+      document.write injects raw markup into the page and can lead to XSS
+      (CWE-79). Prefer safe DOM APIs.
+    metadata:
+      cwe:
+        - "CWE-79: Improper Neutralization of Input During Web Page Generation"
+      owasp:
+        - "A03:2021 - Injection"
+      references:
+        - "https://developer.mozilla.org/en-US/docs/Web/API/Document/write"
+      bughunter.custom: "true"
+    pattern: document.write(...)
+
+  - id: bughunter.javascript.eval-call
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: >-
+      eval() executes arbitrary string code; avoid it entirely to prevent
+      code injection (CWE-95).
+    metadata:
+      cwe:
+        - "CWE-95: Improper Neutralization of Directives in Dynamically Evaluated Code"
+      owasp:
+        - "A03:2021 - Injection"
+      references:
+        - "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval"
+      bughunter.custom: "true"
+    pattern: eval(...)
+
+  - id: bughunter.javascript.react-dangerously-set-inner-html
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: >-
+      dangerouslySetInnerHTML bypasses React escaping and can cause XSS
+      (CWE-79). Sanitize HTML (e.g. DOMPurify) before rendering.
+    metadata:
+      cwe:
+        - "CWE-79: Improper Neutralization of Input During Web Page Generation"
+      owasp:
+        - "A03:2021 - Injection"
+      references:
+        - "https://react.dev/reference/react/dom/common-components#dangerouslysetinnerhtml"
+      bughunter.custom: "true"
+    pattern: '<$EL dangerouslySetInnerHTML={{__html: $X}} />'
