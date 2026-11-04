@@ -27,3 +27,15 @@ class FeatureDisabledError(BugHunterError):
 
 class ConfigurationError(BugHunterError):
     """Invalid local configuration or environment."""
+
+
+class ToolUnavailableError(BugHunterError):
+    """Docker is unavailable or the required image is missing."""
+
+
+class ScannerError(BugHunterError):
+    """A scanner failed: non-zero exit, timeout, or unparseable report."""
+
+
+class IllegalTransitionError(BugHunterError):
+    """A finding status transition outside the whitelist was attempted."""

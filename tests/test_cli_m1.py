@@ -1,14 +1,19 @@
 """End-to-end CLI tests for the M1 happy path and red-line rejections."""
 
+from datetime import timedelta
+
 import pytest
 from typer.testing import CliRunner
 
 from bughunter.app import container
 from bughunter.app.cli import app, main
+from bughunter.core.models import utcnow
 
 runner = CliRunner()
-VF = "2026-10-24T00:00:00"
-VT = "2026-10-31T00:00:00"
+# Dynamic window so the suite stays valid regardless of the run date.
+_ANCHOR = utcnow()
+VF = (_ANCHOR - timedelta(days=1)).replace(microsecond=0).isoformat()
+VT = (_ANCHOR + timedelta(days=7)).replace(microsecond=0).isoformat()
 
 
 def run(*args: str, input: str | None = None):

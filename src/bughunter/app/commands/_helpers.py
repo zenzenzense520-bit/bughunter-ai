@@ -2,7 +2,7 @@
 
 from contextlib import contextmanager
 
-from ...core.db import session_scope
+from ...core.models import session_scope
 from .. import container
 
 

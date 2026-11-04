@@ -44,3 +44,6 @@ minversion = "8.0"
 testpaths = ["tests"]
 pythonpath = ["src"]
 addopts = "-ra"
+markers = [
+    "docker: integration tests that need Docker images (deselected unless --run-docker)",
+]
