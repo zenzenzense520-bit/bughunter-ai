@@ -3,7 +3,7 @@
 from functools import lru_cache
 from pathlib import Path
 
-from ..core.db import init_db, make_engine
+from ..core.models import init_db, make_engine
 from .config import Settings
 
 

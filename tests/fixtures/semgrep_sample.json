@@ -1,0 +1,50 @@
+{
+  "version": "1.120.0",
+  "results": [
+    {
+      "check_id": "bughunter.python.eval-exec",
+      "path": "src/app.py",
+      "start": { "line": 10, "col": 11, "offset": 100 },
+      "end": { "line": 10, "col": 15, "offset": 104 },
+      "extra": {
+        "message": "eval()/exec() execute dynamic code.",
+        "severity": "ERROR",
+        "metadata": {
+          "cwe": ["CWE-95: Eval Injection"],
+          "owasp": ["A03:2021 - Injection"],
+          "references": [
+            "https://docs.python.org/3/library/functions.html#eval"
+          ]
+        }
+      }
+    },
+    {
+      "check_id": "bughunter.python.tls-verify-disabled",
+      "path": "/src/lib/net.py",
+      "start": { "line": 22, "col": 4, "offset": 500 },
+      "end": { "line": 22, "col": 40, "offset": 536 },
+      "extra": {
+        "message": "verify=False disables TLS validation.",
+        "severity": "WARNING",
+        "metadata": {
+          "cwe": ["CWE-295: Improper Certificate Validation"],
+          "owasp": ["A02:2021 - Cryptographic Failures"]
+        }
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 3,
+      "level": "error",
+      "message": "invalid rule schema",
+      "type": "InvalidRuleSchemaError"
+    }
+  ],
+  "paths": {
+    "scanned": ["src/app.py", "lib/net.py"],
+    "skipped": [
+      { "path": "bundle.min.js", "reason": "minified file" }
+    ]
+  }
+}

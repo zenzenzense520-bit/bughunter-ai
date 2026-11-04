@@ -1,0 +1,155 @@
+rules:
+  - id: bughunter.python.eval-exec
+    languages: [python]
+    severity: ERROR
+    message: >-
+      eval()/exec() execute dynamic code. If the argument is influenced by
+      user input this is direct code injection (CWE-95).
+    metadata:
+      cwe:
+        - "CWE-95: Improper Neutralization of Directives in Dynamically Evaluated Code ('Eval Injection')"
+      owasp:
+        - "A03:2021 - Injection"
+      references:
+        - "https://docs.python.org/3/library/functions.html#eval"
+      bughunter.custom: "true"
+    patterns:
+      - pattern-either:
+          - pattern: eval(...)
+          - pattern: exec(...)
+
+  - id: bughunter.python.subprocess-shell-true
+    languages: [python]
+    severity: ERROR
+    message: >-
+      subprocess with shell=True invokes a shell and allows command injection
+      when arguments contain user-controlled data (CWE-78).
+    metadata:
+      cwe:
+        - "CWE-78: Improper Neutralization of Special Elements used in an OS Command"
+      owasp:
+        - "A03:2021 - Injection"
+      references:
+        - "https://docs.python.org/3/library/subprocess.html#security-considerations"
+      bughunter.custom: "true"
+    pattern: subprocess.$FUNC(..., shell=True, ...)
+
+  - id: bughunter.python.sql-string-concat
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Building a SQL query with string concatenation or an f-string is prone
+      to SQL injection. Use parameterized queries instead (CWE-89).
+    metadata:
+      cwe:
+        - "CWE-89: Improper Neutralization of Special Elements used in an SQL Command"
+      owasp:
+        - "A03:2021 - Injection"
+      references:
+        - "https://docs.python.org/3/library/sqlite3.html#sqlite3-placeholders"
+      bughunter.custom: "true"
+    patterns:
+      - pattern-either:
+          - pattern: $CUR.execute($PREFIX + $X)
+          - pattern: $CUR.execute($X + $SUFFIX)
+          - pattern: $CUR.execute(f"...{$X}...")
+
+  - id: bughunter.python.pickle-deserialization
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Deserializing untrusted data with pickle can execute arbitrary code
+      (CWE-502). Prefer safe formats such as JSON.
+    metadata:
+      cwe:
+        - "CWE-502: Deserialization of Untrusted Data"
+      owasp:
+        - "A08:2021 - Software and Data Integrity Failures"
+      references:
+        - "https://docs.python.org/3/library/pickle.html"
+      bughunter.custom: "true"
+    patterns:
+      - pattern-either:
+          - pattern: pickle.loads(...)
+          - pattern: pickle.load(...)
+          - pattern: cPickle.loads(...)
+          - pattern: cPickle.load(...)
+
+  - id: bughunter.python.yaml-unsafe-load
+    languages: [python]
+    severity: WARNING
+    message: >-
+      yaml.load without a SafeLoader can instantiate arbitrary Python objects
+      (CWE-502). Use yaml.safe_load.
+    metadata:
+      cwe:
+        - "CWE-502: Deserialization of Untrusted Data"
+      owasp:
+        - "A08:2021 - Software and Data Integrity Failures"
+      references:
+        - "https://pyyaml.org/wiki/PyYAMLDocumentation"
+      bughunter.custom: "true"
+    patterns:
+      - pattern: yaml.load($X)
+      - pattern-not: yaml.load($X, Loader=yaml.SafeLoader)
+      - pattern-not: yaml.load($X, Loader=yaml.CSafeLoader)
+
+  - id: bughunter.python.tls-verify-disabled
+    languages: [python]
+    severity: WARNING
+    message: >-
+      verify=False disables TLS certificate validation and enables
+      machine-in-the-middle attacks (CWE-295).
+    metadata:
+      cwe:
+        - "CWE-295: Improper Certificate Validation"
+      owasp:
+        - "A02:2021 - Cryptographic Failures"
+      references:
+        - "https://requests.readthedocs.io/en/latest/user/advanced/#ssl-cert-verification"
+      bughunter.custom: "true"
+    pattern: requests.$METHOD(..., verify=False, ...)
+
+  - id: bughunter.python.hardcoded-secret
+    languages: [python]
+    severity: WARNING
+    message: >-
+      A hardcoded credential/secret was found. Move secrets to environment
+      variables or a secret store (CWE-798).
+    metadata:
+      cwe:
+        - "CWE-798: Use of Hard-coded Credentials"
+      owasp:
+        - "A07:2021 - Identification and Authentication Failures"
+      references:
+        - "https://cwe.mitre.org/data/definitions/798.html"
+      bughunter.custom: "true"
+    patterns:
+      - pattern-either:
+          - pattern: '$KEY = "$VALUE"'
+          - pattern: '$KEY: str = "$VALUE"'
+      - metavariable-regex:
+          metavariable: $KEY
+          regex: (?i).*(password|passwd|secret|api_?key|apikey|access_token|auth_token|token)
+      - focus-metavariable: $KEY
+
+  - id: bughunter.python.weak-hash-md5-sha1
+    languages: [python]
+    severity: WARNING
+    message: >-
+      MD5/SHA1 are cryptographically broken and must not be used for security
+      purposes (CWE-327). Use SHA-256 or stronger.
+    metadata:
+      cwe:
+        - "CWE-327: Use of a Broken or Risky Cryptographic Algorithm"
+      owasp:
+        - "A02:2021 - Cryptographic Failures"
+      references:
+        - "https://docs.python.org/3/library/hashlib.html"
+      bughunter.custom: "true"
+    patterns:
+      - pattern-either:
+          - pattern: hashlib.md5()
+          - pattern: hashlib.md5(...)
+          - pattern: hashlib.sha1()
+          - pattern: hashlib.sha1(...)

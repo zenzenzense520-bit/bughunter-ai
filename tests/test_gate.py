@@ -7,8 +7,11 @@ import pytest
 from bughunter.core.enums import TargetStatus
 from bughunter.core.errors import AuthorizationError
 from bughunter.core.gate import AuthorizationGate
+from bughunter.core.models import utcnow
 
-NOW = datetime(2026, 10, 24, 12, 0, 0, tzinfo=timezone.utc)
+# Anchor to the real clock so day-granular authorization windows stay valid
+# regardless of when the suite is run.
+NOW = utcnow()
 
 
 def test_unknown_target_rejected(factories, session):
