@@ -58,6 +58,7 @@ class Severity(str, Enum):
 
 class FindingStatus(str, Enum):
     NEW = "new"
+    RULE_TRIAGED = "rule_triaged"
     AI_TRIAGED = "ai_triaged"
     TRIAGE_FAILED = "triage_failed"
     PENDING_REVIEW = "pending_review"
@@ -87,3 +88,6 @@ class AuditAction(str, Enum):
     ACTIVE_SCAN_BLOCKED = "active_scan_blocked"
     FINDING_RECORDED = "finding_recorded"
     FINDING_DEDUPED = "finding_deduped"
+    FINDING_TRIAGED = "finding_triaged"
+    TRIAGE_FAILED = "triage_failed"
+    TRIAGE_SKIPPED = "triage_skipped"

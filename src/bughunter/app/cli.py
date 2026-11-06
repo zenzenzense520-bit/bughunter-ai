@@ -6,7 +6,7 @@ from typer.core import TyperGroup
 
 from ..core.errors import BugHunterError
 from . import container
-from .commands import audit_cmd, authz, scan, scopes, targets
+from .commands import audit_cmd, authz, findings, review, scan, scopes, targets
 from .logging import get_logger, setup_logging
 
 
@@ -31,6 +31,8 @@ app.add_typer(targets.app, name="target")
 app.add_typer(authz.app, name="authz")
 app.add_typer(scopes.app, name="scope")
 app.add_typer(scan.app, name="scan")
+app.add_typer(findings.app, name="finding")
+app.add_typer(review.app, name="review")
 app.add_typer(audit_cmd.app, name="audit")
 
 

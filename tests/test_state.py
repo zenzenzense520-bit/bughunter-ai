@@ -26,6 +26,15 @@ def test_human_can_skip_ai_when_unavailable():
     assert can_transition(FindingStatus.NEW.value, FindingStatus.PENDING_REVIEW.value)
 
 
+def test_rule_triage_routes_to_review_without_llm_state():
+    assert can_transition(
+        FindingStatus.NEW.value, FindingStatus.RULE_TRIAGED.value
+    )
+    assert can_transition(
+        FindingStatus.RULE_TRIAGED.value, FindingStatus.PENDING_REVIEW.value
+    )
+
+
 def test_triage_failed_can_retry_or_go_to_human():
     assert can_transition(
         FindingStatus.TRIAGE_FAILED.value, FindingStatus.AI_TRIAGED.value

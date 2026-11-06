@@ -18,16 +18,22 @@ from .errors import IllegalTransitionError
 ALLOWED_TRANSITIONS: dict[FindingStatus, frozenset[FindingStatus]] = {
     FindingStatus.NEW: frozenset(
         {
+            FindingStatus.RULE_TRIAGED,
             FindingStatus.AI_TRIAGED,
             FindingStatus.TRIAGE_FAILED,
             FindingStatus.PENDING_REVIEW,
         }
     ),
+    FindingStatus.RULE_TRIAGED: frozenset({FindingStatus.PENDING_REVIEW}),
     FindingStatus.AI_TRIAGED: frozenset(
         {FindingStatus.PENDING_REVIEW, FindingStatus.TRIAGE_FAILED}
     ),
     FindingStatus.TRIAGE_FAILED: frozenset(
-        {FindingStatus.AI_TRIAGED, FindingStatus.PENDING_REVIEW}
+        {
+            FindingStatus.RULE_TRIAGED,
+            FindingStatus.AI_TRIAGED,
+            FindingStatus.PENDING_REVIEW,
+        }
     ),
     FindingStatus.PENDING_REVIEW: frozenset(
         {

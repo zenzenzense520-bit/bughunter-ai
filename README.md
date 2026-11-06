@@ -1,6 +1,6 @@
 # BugHunter AI
 
-授权漏洞赏金 / 授权安全测试的本地工作台。围绕「授权目标 → 工具扫描 → AI 分诊 → 人工复核 → 证据报告 → 人工提交」流水线，把重复劳动自动化，把越界动作留给人。
+授权漏洞赏金 / 授权安全测试的本地工作台。围绕「授权目标 → 工具扫描 → 离线规则分诊 → 人工复核 → 证据报告 → 人工提交」流水线，把重复劳动自动化，把越界动作留给人。LLM 增强是可选扩展，不是运行前提。
 
 ## 合规声明（使用前必读）
 
@@ -14,7 +14,6 @@
 - Windows + PowerShell 7
 - [uv](https://docs.astral.sh/uv/)（Python 包管理）
 - Docker Desktop（运行 Semgrep、ZAP、Juice Shop 容器）
-- Ollama（本地大模型，OpenAI 兼容接口 `http://127.0.0.1:11434/v1`）
 
 ## 快速开始
 
@@ -50,7 +49,7 @@ src/bughunter/
   core/      领域模型、DB、授权门、ScopeGuard、限速器（红线）
   infra/     审计日志（后续：Docker/子进程封装）
   scanners/  Semgrep / ZAP 适配器（M2/M5）
-  analysis/  AI 分诊（M3）
+  analysis/  离线规则分诊与可插拔增强接口（M3）
   workflow/  复核、证据、报告、提交包（M4+）
 assets/      默认配置、Semgrep 规则、报告模板
 data/        运行时数据（数据库、证据、报告，已 gitignore）

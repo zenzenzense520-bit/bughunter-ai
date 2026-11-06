@@ -1,7 +1,7 @@
 """SQLModel tables plus the SQLite engine factory.
 
 Tables: targets / authorizations / scope_entries / rate_events / tasks /
-scans / findings / audit_log.
+scans / findings / triage_records / audit_log.
 """
 
 from collections.abc import Iterator
@@ -127,6 +127,16 @@ class Finding(SQLModel, table=True):
     references_json: str = Field(default="[]")
     source_ref: str = Field(default="")
     status: str = Field(default=FindingStatus.NEW.value, index=True)
+    created_at: datetime = Field(default_factory=utcnow)
+
+
+class TriageRecord(SQLModel, table=True):
+    """Immutable snapshot of one deterministic or enhanced triage run."""
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    finding_id: int = Field(foreign_key="finding.id", index=True)
+    provider: str = Field(default="rules", index=True)
+    result_json: str
     created_at: datetime = Field(default_factory=utcnow)
 
 

@@ -39,3 +39,7 @@ class ScannerError(BugHunterError):
 
 class IllegalTransitionError(BugHunterError):
     """A finding status transition outside the whitelist was attempted."""
+
+
+class FindingNotFoundError(BugHunterError):
+    """A requested finding does not exist."""

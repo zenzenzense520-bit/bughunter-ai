@@ -317,38 +317,11 @@ class TaskKind(str, Enum):
 - 归一化时丢弃 scope 外 host、丢弃 informational 重复项（保留统计）；
 - 主动扫描：函数存在但内部第一行 `raise FeatureDisabledError("v1 未启用主动扫描")`。
 
-### 7.7 AI 结果分析（analysis/）
+### 7.7 分诊与可选增强（analysis/）
 
-**LLM 客户端**
-- 仅通过 httpx 调用 OpenAI 兼容接口（`base_url` + `api_key` 从环境变量读取，不入库、不进日志）；
-- 兼容本地 Ollama（`http://127.0.0.1:11434/v1`）；
-- 超时、重试（上限 2 次）、JSON 解析失败显式标记 `triage_failed`，不产生伪结论。
-
-**结构化输出（Pydantic 校验）**
-
-```python
-class AiTriageResult(BaseModel):
-    summary: str
-    root_cause: str
-    false_positive_risk: Literal["low", "medium", "high"]
-    confidence: Literal["low", "medium", "high"]
-    verification_steps: list[str]   # 给人执行的验证步骤，只描述观察与判断
-    cwe_id: str | None
-    wstg_id: list[str]
-    remediation: str
-    needs_human_input: bool
-    rationale: str                  # 必须引用证据中的事实，不允许臆测
-```
-
-**提示词红线（prompts.py 固化）**
-- 只能基于给定证据分析；证据不足必须 `confidence=low` 且 `needs_human_input=true`；
-- 不生成攻击 payload、不写利用代码、不提供绕过防护建议；
-- `verification_steps` 只描述"在授权范围内如何人工观察/确认"（如查看某处响应头、核对某段代码的数据流）；
-- 不允许把被动告警直接定性为"可利用漏洞"，必须说明条件。
-
-**去重（dedup.py）**
-- 归一化生成 `dedup_key`：`tool + rule_id + 规范化 location + 参数名`；
-- 同目标内重复直接归并，跨工具同类问题（如 CWE 相同 + 同一 URL/文件）标记为"疑似重复"交人工裁决。
+- 第一层为零成本、可复现的离线规则分诊：根据 severity、CWE、规则类型、测试/依赖目录和文件名启发式，生成强类型 `TriageResult`（启发式置信度、误报风险、优先级、信号、人工验证清单）。
+- 规则结果进入 `pending_review`，人工确认仍是后续报告的必要条件；分诊分数不是统计概率或漏洞确认。
+- 第二层通过 `TriageEnhancer` 接口可选注入；默认不实例化、不访问网络。未来 LLM 仅能补充或细化结构化结果，不能自动确认 finding。
 
 ### 7.8 人工验证与复核（workflow/review.py + checklist.py）
 
@@ -407,8 +380,9 @@ data/evidence/<target_id>/<finding_id>/
 
 ```
 new
- └─> ai_triaged            （AI 分诊成功；失败则保持 new + 标记 triage_failed）
-      └─> pending_review
+ ├─> rule_triaged          （离线规则分诊成功） -> pending_review
+ ├─> ai_triaged            （兼容的 AI 分诊结果） -> pending_review
+ └─> triage_failed         （分诊/增强失败；可重试或人工跳过）
            ├─ confirmed ─> report_drafted ─> report_reviewed ─> pack_ready ─> submitted*
            ├─ false_positive（终态，记录原因）
            ├─ duplicate（终态，关联原 finding）
@@ -431,8 +405,8 @@ bughunter scope add-include | add-exclude | list
 bughunter scan sast --target T --path P [--config auto]
 bughunter scan passive --target T --url U   # 唯一放行的 Web 扫描
 bughunter task list
-bughunter finding list | show | triage      # triage 可重跑，保留历史
-bughunter review queue
+bughunter finding triage [--finding ID | --target ID]
+bughunter review queue | show --finding ID | skip-triage --finding ID
 bughunter review confirm | false-positive | duplicate | out-of-scope <id>
 bughunter evidence list | show | add-note
 bughunter report finding <id> | summary <target>
@@ -497,7 +471,7 @@ response_max_bytes = 4096
 | M0 脚手架 | uv init、pyproject、目录、日志、配置、DB 建表 | `bughunter --help` 可用；空库初始化 |
 | M1 红线地基 | target/authz/scope/ratelimit/audit + 单测 | 无授权/越界/预算超限 100% 被拒；测试全绿 |
 | M2 SAST | Semgrep Docker runner、归一化、自定义规则 | vuln_app 可检出预置问题并入库 |
-| M3 AI 分诊 | LLM 客户端、schema 校验、去重、复核队列 | 样例 finding 输出结构化分诊；失败路径可观测 |
+| M3 分诊 | 离线规则、结构化结果、可插拔增强接口、复核队列 | 样例 finding 可重复地产生分诊结果并进入人工队列；LLM 不作为依赖 |
 | M4 证据与报告 | 证据目录、脱敏、两份模板、报告版本 | 生成脱敏完整报告；敏感模式自检拦截 |
 | M5 被动 DAST | ZAP Baseline、context 注入、Juice Shop E2E | 端到端跑通；scope 外告警被丢弃 |
 | M6 收尾 | 草稿包 + 提交清单、README 合规声明、文档 | 红线自检清单全过；v1.0 |

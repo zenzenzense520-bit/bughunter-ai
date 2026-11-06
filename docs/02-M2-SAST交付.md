@@ -58,11 +58,14 @@
 4. **目录约束重构**：为避免 `core/` 超过 8 文件，将 M1 的 `db.py` 并入 `models.py`，3 处引用同步修改；
 5. **退出码容错**：Semgrep 退出码 0/1/4 只要 stdout 是合法 JSON 即解析（4 表示部分文件 parse skip），无 JSON 才抛 ScannerError。
 
-## 五、下一步（M3）
+## 五、M3 分诊设计
 
-- 本机 `ollama pull qwen2.5:7b`（当前仅有 cloud 模型）；
-- AI 分诊模块：对 status=new 的 finding 调用本地 Ollama，输出置信度、根因、验证思路；
-- 分诊结果驱动 Finding 状态机迁移（new → ai_triaged / triage_failed），仍不自动确认。
+M3 先运行零成本、可复现的离线规则分诊；不需要 Ollama、API key 或网络。`TriageResult` 结构化保存规则类型、置信度、误报风险、优先级、路径启发式信号和人工验证清单。规则综合 severity、CWE、规则 id/标题、测试/依赖目录及文件名线索；置信度是可解释的启发式分数，不是统计概率。
+
+- `bughunter finding triage`：处理全部新 finding；可用 `--finding` 或 `--target` 限定范围；
+- 状态路径：`new → rule_triaged → pending_review`，不自动确认；
+- `bughunter review queue` / `bughunter review show --finding <id>`：查看复核队列与验证清单；`review skip-triage` 可由人工跳过失败的增强步骤；
+- 结果以 `TriageRecord` 快照持久化；规则增强通过 `TriageEnhancer` 协议注入，默认不启用，后续可接 LLM。
 
 ## 六、已知边界
 
